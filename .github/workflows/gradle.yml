@@ -4,10 +4,8 @@
 name: Java CI with Gradle
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+  - push
+  - pull_request
 
 jobs:
   build:
@@ -22,10 +20,12 @@ jobs:
         #cache: maven
     - name: Build with Gradle
       run: |
+        chmod +x gradlew
         ./gradlew shadowJar --no-daemon
         mkdir staging/ && cp dev.skidfuscator.client.standalone/build/libs/client-standalone-all.jar staging
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v3.1.0
+      uses: actions/upload-artifact@v3
       with:
         name: Skidfuscator.jar
-        path: staging/client-standalone-all.jar
+        path: dev.skidfuscator.client.standalone/build/libs/client-standalone-all.jar
+        if-no-files-found: warn
