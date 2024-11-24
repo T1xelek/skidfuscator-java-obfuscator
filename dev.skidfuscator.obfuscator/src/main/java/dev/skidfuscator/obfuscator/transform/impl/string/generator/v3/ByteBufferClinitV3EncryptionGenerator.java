@@ -64,16 +64,24 @@ public class ByteBufferClinitV3EncryptionGenerator extends AbstractEncryptionGen
         ));*/
     }
 
+    static byte[] salt = null;
+
     @Override
     public Expr encrypt(String input, SkidMethodNode node, SkidBlock block) {
         final byte[] encrypted = input.getBytes(StandardCharsets.UTF_16BE);
-
+        final int predicate = node.getBlockPredicate(block);
         // Super simple converting our integer to string, and getting bytes.
-        final byte[] keyBytes = Integer.toString(node.getBlockPredicate(block)).getBytes();
+        final byte[] keyBytes = Integer.toString(predicate).getBytes();
+        final long salt = predicate.length ^ predicate ^ keyBytes.length;
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(salt);
+        
+        byte[] saltBytes = buffer.array();
 
         // Super simple XOR
         for (int i = 0; i < encrypted.length; i++) {
             encrypted[i] ^= keyBytes[i % keyBytes.length];
+            encrypted[i] ^= saltBytes[i % saltBytes.length];
         }
 
         final byte[] encryptedByteBuffer = new byte[8];
@@ -124,6 +132,7 @@ public class ByteBufferClinitV3EncryptionGenerator extends AbstractEncryptionGen
     )
     private static String decryptMeBitch(final byte[] index, final int key) {
         final byte[] keyBytes = Integer.toString(key).getBytes();
+        final byte[] saltBytes = ByteBuffer.allocate(Long.BYTES).putLong((long)(key.length ^ key ^ keyBytes.length)).array();
 
         final int size = ((index[0] & 0xFF) << 24) | ((index[1] & 0xFF) << 16) | ((index[2] & 0xFF) << 8) | (index[3] & 0xFF);
         final int offset = ((index[4] & 0xFF) << 24) | ((index[5] & 0xFF) << 16) | ((index[6] & 0xFF) << 8) | (index[7] & 0xFF);
@@ -134,6 +143,7 @@ public class ByteBufferClinitV3EncryptionGenerator extends AbstractEncryptionGen
         // Super simple XOR
         for (int i = 0; i < input.length; i++) {
             input[i] ^= keyBytes[i % keyBytes.length];
+            input[i] ^= saltBytes[i % saltBytes.length];
         }
 
         // Base64 encode it for testing
