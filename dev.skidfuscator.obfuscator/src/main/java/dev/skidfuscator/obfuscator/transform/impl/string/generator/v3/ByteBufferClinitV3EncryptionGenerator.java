@@ -72,11 +72,11 @@ public class ByteBufferClinitV3EncryptionGenerator extends AbstractEncryptionGen
         final int predicate = node.getBlockPredicate(block);
         // Super simple converting our integer to string, and getting bytes.
         final byte[] keyBytes = Integer.toString(predicate).getBytes();
-        final long salt = predicate.length ^ predicate ^ keyBytes.length;
-        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
-        buffer.putLong(salt);
+        final long salt = (long) (predicate ^ keyBytes.length);
+        ByteBuffer buf = ByteBuffer.allocate(Long.BYTES);
+        buf.putLong(salt);
         
-        byte[] saltBytes = buffer.array();
+        byte[] saltBytes = buf.array();
 
         // Super simple XOR
         for (int i = 0; i < encrypted.length; i++) {
@@ -132,7 +132,7 @@ public class ByteBufferClinitV3EncryptionGenerator extends AbstractEncryptionGen
     )
     private static String decryptMeBitch(final byte[] index, final int key) {
         final byte[] keyBytes = Integer.toString(key).getBytes();
-        final byte[] saltBytes = ByteBuffer.allocate(Long.BYTES).putLong((long)(key.length ^ key ^ keyBytes.length)).array();
+        final byte[] saltBytes = ByteBuffer.allocate(Long.BYTES).putLong((long)(key ^ keyBytes.length)).array();
 
         final int size = ((index[0] & 0xFF) << 24) | ((index[1] & 0xFF) << 16) | ((index[2] & 0xFF) << 8) | (index[3] & 0xFF);
         final int offset = ((index[4] & 0xFF) << 24) | ((index[5] & 0xFF) << 16) | ((index[6] & 0xFF) << 8) | (index[7] & 0xFF);
