@@ -41,8 +41,7 @@ public class StringTransformerV2 extends AbstractTransformer {
     void handle(final RunMethodTransformEvent event) {
         final SkidMethodNode methodNode = event.getMethodNode();
 
-        if (methodNode.isAbstract()
-                || methodNode.isInit()) {
+        if (methodNode.isAbstract()) {
             this.skip();
             return;
         }
